@@ -68,7 +68,7 @@
 %	Address C-D}
 %
 \begin{document}
-%\ninept
+\ninept
 %
 \maketitle
 %
@@ -170,6 +170,19 @@ The contributions of this work are threefold:
       criterion.
 \end{enumerate}
 
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_pipeline.pdf}
+\caption{Overview of the exemplar-based correction framework. Stage~I
+constructs an incumbent gallery from ASR-labelled audio spans and a domain-term
+gallery from mined and synthetic exemplars. Stage~II retrieves a candidate term
+for a flagged speech span and accepts the substitution only when both the
+acoustic-margin and phonetic-distance conditions are satisfied. Reference text
+is used during experimental preparation, including Korean TTS carrier selection,
+but is not required for the correction decision.}
+\label{fig:pipeline}
+\end{figure*}
+
 \section{Method}
 \label{sec:method}
 
@@ -187,19 +200,6 @@ constructs acoustic exemplar collections from ASR-labelled speech and synthesise
 speech. The second stage embeds the flagged audio span, retrieves a candidate
 domain term, and applies a decision rule combining acoustic and phonetic
 evidence.
-
-\begin{figure*}[t]
-\centering
-\includegraphics[width=\textwidth]{figures/fig_pipeline.pdf}
-\caption{Overview of the exemplar-based correction framework. Stage~I
-constructs an incumbent gallery from ASR-labelled audio spans and a domain-term
-gallery from mined and synthetic exemplars. Stage~II retrieves a candidate term
-for a flagged speech span and accepts the substitution only when both the
-acoustic-margin and phonetic-distance conditions are satisfied. Reference text
-is used during experimental preparation, including Korean TTS carrier selection,
-but is not required for the correction decision.}
-\label{fig:pipeline}
-\end{figure*}
 
 The correction module operates on audio and recognition hypotheses without
 requiring access to decoder states, lattices, or $n$-best lists. Gallery
@@ -260,13 +260,7 @@ R(\mathbf{q}_w,T) &= A_{k_E}\!\left(\left\{d_{\mathrm{ac}}(\mathbf{q}_w,\mathbf{
 We use $k_S=10$ and $k_E=5$. When fewer than $k$ eligible exemplars remain, the
 score averages all available distances.
 
-Gallery membership is filtered separately for each query. In the Korean Whisper
-experiments, incumbent exemplars from the query utterance are excluded, while
-mined term exemplars sharing the query's speaker, utterance, or
-recording-session identifier are excluded where those identifiers are available.
-The Mandarin experiments additionally exclude same-speaker incumbent exemplars.
-For the Korean clinical corpus, source-folder identifiers serve as speaker
-proxies and do not guarantee speaker separation.
+For each query we exclude exemplars from the same utterance to prevent self-matching. Additional speaker or session exclusions are applied according to the experimental configuration, to reduce overlap between query and gallery audio.
 
 The candidate term is selected by
 $T_1 = \arg\min_{T\in\Tlist} R(\mathbf{q}_w,T)$.
@@ -682,20 +676,6 @@ to determine how often correction alters grammatical structure.
 
 
 \vfill\pagebreak
-
-\section{REFERENCES}
-\label{sec:refs}
-
-List and number all bibliographical references at the end of the
-paper. The references can be numbered in alphabetic order or in
-order of appearance in the document. When referring to them in
-the text, type the corresponding reference number in square
-brackets as shown at the end of this sentence \cite{C2}. An
-additional final page (the fifth page, in most cases) is
-allowed, but must contain only references to the prior
-literature.
-
-Please follow the IEEE Citation Guidelines, \url{https://ieee-dataport.org/sites/default/files/analysis/27/IEEE\%20Citation\%20Guidelines.pdf} for formatting of references.
 
 % References should be produced using the bibtex program from suitable
 % BiBTeX files (here: strings, refs, manuals). The IEEEbib.bst bibliography
