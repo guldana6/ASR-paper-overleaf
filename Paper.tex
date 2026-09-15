@@ -233,9 +233,7 @@ combined audio span. This procedure does not use reference transcripts to verify
 the spoken content. \emph{Synthetic speech}: target terms are synthesised within
 carrier sentences using multiple TTS voices. The generated sentences are aligned,
 and the target-term spans are extracted and embedded using the same encoder as
-the query spans. In the Korean experiments, carrier sentences are selected from
-reference transcripts, restricted to contexts in which the ASR hypothesis
-correctly contains the target term.
+the query spans.
 
 The main Korean configuration combines mined and synthetic exemplars. Because
 mining requires a matching pseudo-label span, terms that are consistently
