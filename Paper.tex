@@ -28,7 +28,6 @@
 \newcommand{\Tlist}{\mathcal{T}}
 \newcommand{\qw}{q_w}
 \newcommand{\dph}{d_{\mathrm{ph}}}
-\newcommand{\reach}{\textit{reach}}
 \newcommand{\gac}{G_{\mathrm{ac}}}
 \newcommand{\gph}{G_{\mathrm{ph}}}
 \newcommand{\corpA}{\textsc{ko-fin}}
@@ -38,6 +37,7 @@
 \newcommand{\zhspo}{\textsc{zh-spo}}
 \newcommand{\zhtec}{\textsc{zh-tec}}
 \newcommand{\best}[1]{\textbf{#1}}
+\usepackage{microtype}
 
 % Title.
 % ------
@@ -80,13 +80,7 @@ of a transcript's meaning, yet contextual biasing requires access to the decoder
 and supervised adaptation often requires labelled in-domain audio. We correct such errors after
 decoding, retrieving acoustic exemplars of each domain term and substituting only
 when an acoustic margin and a phonetic distance agree. Galleries combine speech mined from
-the recogniser's own pseudo-labels with synthetic speech; the correction
-decision itself uses no reference transcript. On Korean clinical and finance speech the method lowers domain-term
-error by 25.4\,\% and 16.5\,\% relative under Qwen3-ASR, and by 14.3\,\% and
-10.7\,\% under Whisper large-v3-turbo, with overall CER also falling in all four
-cases. On four Mandarin domains it lowers domain-term error by 20.1--29.5\,\%
-relative. An ablation attributes most of the reduction to the phonetic condition,
-the acoustic margin contributing little once it is applied.
+the recogniser's own pseudo-labels with synthetic speech; the correction decision itself uses no reference transcript. On Korean clinical and finance speech the method lowers domain-term error by 25.5\,\% and 16.5\,\% relative under Qwen3-ASR, and by 14.3\,\% and 10.7\,\% under Whisper large-v3-turbo. Full-corpus mean per-utterance CER decreases in all four settings, although character-weighted CER increases on finance speech for both recognisers. On four Mandarin domains it lowers domain-term error by 20.1--29.5\,\% relative. An ablation attributes most of the reduction to the phonetic condition, the acoustic margin contributing little once it is applied.
 \end{abstract}
 
 %
@@ -149,9 +143,8 @@ The contributions of this work are threefold:
 \begin{enumerate}\itemsep1pt\parskip0pt
 \item \textbf{An exemplar-based framework for post-recognition domain-term
       correction.} Across Korean finance and clinical speech evaluated with two
-      recognisers, the framework achieves relative reductions of
-      10.7--25.4\,\% in missed reference-term instances, with CER remaining below
-      the corresponding baseline at the selected operating points
+      recognisers, the framework achieves relative reductions of       10.7--25.5\,\% in missed reference-term instances, with full-corpus mean
+      per-utterance CER below baseline at the selected operating points
       (Sec.~\ref{sec:main}). These headline results are evaluated in-sample.
 \item \textbf{A controlled analysis of acoustic and phonetic evidence.} We
       separately evaluate acoustic-margin filtering, phonetic filtering of
@@ -309,9 +302,7 @@ controls described in Sec.~\ref{sec:controls}.
 \subsection{Corpora and target vocabularies}
 \label{sec:data}
 
-We evaluate the method on two Korean corpora and four Mandarin domain subsets. \corpA{} contains 59{,}054 utterances from a financial counselling subset of AI-Hub
-\emph{Counselling Speech}. \corpB{} contains 51{,}898 utterances from the validation split of AI-Hub
-\emph{Medical Staff and Patient Speech}. The corresponding evaluation pools contain 34{,}500 and 34{,}334 utterances. \corpA{} provides 493 speaker identifiers. \corpB{} provides no speaker identifiers, so its 81 source folders are used for exemplar exclusion and grouped evaluation; these folders do not guarantee speaker separation.
+We evaluate the method on two Korean corpora and four Mandarin domain subsets. \corpA{} comprises 59{,}054 utterances from a financial counselling subset of AI-Hub \emph{Counselling Speech}. \corpB{} comprises 51{,}898 utterances from AI-Hub \emph{Medical Staff and Patient Speech}. ASR hypotheses are generated for all utterances in both corpora.
 
 The Mandarin data are drawn from AISHELL-1~\cite{bu2017aishell} and divided into
 finance (\zhfin{}), legal (\zhleg{}), sport (\zhspo{}) and technology
@@ -409,11 +400,10 @@ reference-term instances. Korean evaluation uses token-anchored matching;
 Mandarin evaluation uses Han-character substring matching after orthographic
 normalisation.
 
-DTER does not penalise inserted terms absent from the reference. We therefore
-report CER to assess changes to the complete transcript. Korean CER is averaged
-over utterances in the evaluation pool; Mandarin changes in CER are averaged
-over all utterances within each domain. Fixed, language-specific rules for
-numeral and orthographic normalisation are applied before scoring.
+DTER does not penalise inserted terms absent from the reference. We therefore report CER to assess changes to the complete transcript. Main-result CER is the
+mean of per-utterance CER over each full Korean corpus or Mandarin domain. Utterances without accepted substitutions retain their ASR hypotheses. For the
+Korean main results, the same numeral and orthographic normalisation is applied to the original and corrected hypotheses; Mandarin uses its language-specific normalisation. We also examine micro CER, defined as total character edits divided by total reference characters.
+
 
 For each corpus and recogniser, results are compared with the corresponding
 uncorrected ASR output. We report the number of reference-term instances
@@ -473,8 +463,7 @@ not be interpreted as error rates over the complete vocabulary.
 
 \begin{table}[t]
 \centering
-\caption{Korean correction results. $N_{\mathrm{ref}}$ is the number of
-reference-term instances. $\Delta$CER is in percentage points.}
+\caption{Korean correction results. $N_{\mathrm{ref}}$ is the number of reference-term instances. $\Delta$CER is full-corpus mean per-utterance CER change in percentage points, using common Korean normalisation.}
 \label{tab:main}
 \setlength{\tabcolsep}{3.4pt}\small
 \begin{tabular}{llrrrr}
@@ -484,34 +473,26 @@ reference-term instances. $\Delta$CER is in percentage points.}
 corpus & ASR & $N_{\mathrm{ref}}$ & base & \best{corr.} & $\Delta$CER \\
 \midrule
 \multirow{2}{*}{\corpA{}}
- & Qwen3-ASR & 69{,}429 & \phantom{0}9.71 & \best{\phantom{0}8.10} & $-0.008$ \\
- & Whisper   & 53{,}270 & \phantom{0}6.12 & \best{\phantom{0}5.46} & $-0.003$ \\
+ & Qwen3-ASR & 69{,}429 & \phantom{0}9.71 & \best{\phantom{0}8.10} & $-0.006$ \\
+ & Whisper   & 53{,}270 & \phantom{0}6.12 & \best{\phantom{0}5.46} & $-0.002$ \\
 \multirow{2}{*}{\corpB{}}
- & Qwen3-ASR & 39{,}586 & \phantom{0}9.32 & \best{\phantom{0}6.95} & $-0.040$ \\
- & Whisper   & 39{,}215 & 14.91 & \best{12.78} & $-0.062$ \\
+ & Qwen3-ASR & 39{,}586 & \phantom{0}9.30 & \best{\phantom{0}6.93} & $-0.040$ \\
+ & Whisper   & 39{,}215 & 14.91 & \best{12.78} & $-0.041$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:main} presents the selected operating point for each Korean
-corpus and recogniser. Correction reduces DTER in all four settings while
-keeping CER below the corresponding baseline. Under Whisper, DTER decreases from
-6.12\,\% to 5.46\,\% on \corpA{} and from 14.91\,\% to 12.78\,\% on \corpB{};
-under Qwen3-ASR it decreases from 9.71\,\% to 8.10\,\% and from 9.32\,\% to
-6.95\,\% respectively.
+Table~\ref{tab:main} presents the selected operating point for each Korean corpus and recogniser. Correction reduces DTER in all four settings while keeping full-corpus mean per-utterance CER below baseline. Under Whisper, DTER decreases from 6.12\,\% to 5.46\,\% on \corpA{} and from 14.91\,\% to 12.78\,\% on \corpB{}; under Qwen3-ASR it decreases from 9.71\,\% to 8.10\,\% and from 9.30\,\% to 6.93\,\% respectively.
 
-The CER reductions are small, particularly on \corpA{}. These results
-demonstrate improvements at the selected in-sample operating points. Since the
-recognisers use different error-selected vocabularies, comparisons should be
-made against the baseline within each row.
+The CER reductions are small, particularly on \corpA{}, and depend on the averaging convention. On \corpA{}, micro CER increases by $+0.009$ percentage points under Qwen3-ASR and $+0.006$ under Whisper; on \corpB{} both estimators decrease. The finance results therefore do not establish improvement under character-weighted evaluation. Since the recognisers use different error-selected vocabularies, DTER comparisons should be made against the baseline within each row.
+
 
 \subsection{Acoustic and phonetic controls}
 \label{sec:controls}
 
 \begin{table}[t]
 \centering
-\caption{Controls on Korean Whisper outputs. The text-only row uses the matched
-candidate-utterance subset described in Sec.~\ref{sec:setup}.}
+\caption{Controls on Korean Whisper outputs, retaining original evaluation-pool CER and normalisation. The text-only row uses the matched candidate-utterance subset described in Sec.~\ref{sec:setup}.}
 \label{tab:controls}
 \setlength{\tabcolsep}{2.6pt}\small
 \begin{tabular}{llrrr}
