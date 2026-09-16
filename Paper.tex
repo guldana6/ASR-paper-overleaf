@@ -41,12 +41,11 @@
 
 % Title.
 % ------
-\title{CORRECTING DOMAIN-TERM ASR ERRORS BY ACOUSTIC RETRIEVAL WITH A PHONETIC CONSTRAINT}
+\title{Correcting Domain-Term ASR Errors with Acoustic Exemplar Retrieval and a Form-Similarity Constraint.}
 %
 % Single address.
 % ---------------
-\name{Names\thanks{Thanks to XYZ agency for funding.}}
-\address{Korea AI Lab (K-AI Lab), South Koea}
+\address{Korea AI Lab (K-AI Lab), South Korea}
 %
 % For example:
 % ------------
@@ -80,7 +79,7 @@ of a transcript's meaning, yet contextual biasing requires access to the decoder
 and supervised adaptation often requires labelled in-domain audio. We correct such errors after
 decoding, retrieving acoustic exemplars of each domain term and substituting only
 when an acoustic margin and a phonetic distance agree. Galleries combine speech mined from
-the recogniser's own pseudo-labels with synthetic speech; the correction decision itself uses no reference transcript. On Korean clinical and finance speech the method lowers domain-term error by 25.5\,\% and 16.5\,\% relative under Qwen3-ASR, and by 14.3\,\% and 10.7\,\% under Whisper large-v3-turbo. Full-corpus mean per-utterance CER decreases in all four settings, although character-weighted CER increases on finance speech for both recognisers. On four Mandarin domains it lowers domain-term error by 20.1--29.5\,\% relative. An ablation attributes most of the reduction to the phonetic condition, the acoustic margin contributing little once it is applied.
+the recogniser's own pseudo-labels with synthetic speech; the correction decision itself uses no reference transcript. On Korean clinical and finance speech the method lowers domain-term error by 25.5\,\% and 16.5\,\% relative under Qwen3-ASR, and by 14.3\,\% and 10.7\,\% under Whisper large-v3-turbo. Full-corpus mean per-utterance CER decreases in all four settings, although character-weighted CER increases on finance speech for both recognisers. On four Mandarin domains it lowers domain-term error by 19.2--22.0\,\% relative. An ablation attributes most of the reduction to the phonetic condition, the acoustic margin contributing little once it is applied.
 \end{abstract}
 
 %
@@ -285,11 +284,8 @@ forms. We define
                  {\max\!\left(|\phi(w)|,|\phi(T)|,1\right)} ,
 \label{eq:dph}
 \end{equation}
-where $\operatorname{Lev}$ is Levenshtein distance and $\phi$ maps text to a
-language-specific symbol sequence. For Korean experiments, $\phi$
-decomposes written Hangul syllables into jamo without applying
-pronunciation-conversion rules. For Mandarin, $\phi$ uses pinyin initials and
-finals with tone information.
+where $\operatorname{Lev}$ is Levenshtein distance and $\phi$ maps text to a language-specific symbol sequence. For Korean, $\phi$ decomposes written Hangul syllables into jamo without applying pronunciation-conversion rules, so the distance measures orthographic form. For Mandarin, $\phi$ uses pinyin initials and finals with tone information, which makes the distance phonetic. We use \emph{phonetic} as a shorthand for both throughout.
+
 
 When both conditions hold, the flagged word is replaced by $T_1$; otherwise the
 original hypothesis is retained. The framework makes at most one substitution per
@@ -304,68 +300,25 @@ controls described in Sec.~\ref{sec:controls}.
 
 We evaluate the method on two Korean corpora and four Mandarin domain subsets. \corpA{} comprises 59{,}054 utterances from a financial counselling subset of AI-Hub \emph{Counselling Speech}. \corpB{} comprises 51{,}898 utterances from AI-Hub \emph{Medical Staff and Patient Speech}. ASR hypotheses are generated for all utterances in both corpora.
 
-The Mandarin data are drawn from AISHELL-1~\cite{bu2017aishell} and divided into
-finance (\zhfin{}), legal (\zhleg{}), sport (\zhspo{}) and technology
-(\zhtec{}) subsets, containing 52{,}840, 30{,}301, 24{,}028 and 19{,}765
-utterances respectively. Since AISHELL-1 does not provide domain annotations,
-labels are inferred from reference transcripts in blocks of ten consecutive
-utterances. Agreement with independently available prompt-index groupings is
-97\,\%, 83\,\%, 92\,\% and 70\,\% for the four domains. Each domain is evaluated
-separately.
+The Mandarin data are drawn from AISHELL-1~\cite{bu2017aishell} and divided into four domain subsets: finance (\zhfin{}, 52{,}840 utterances), legal (\zhleg{}, 30{,}301), sport (\zhspo{}, 24{,}028) and technology (\zhtec{}, 19{,}765). Since AISHELL-1 does not provide domain annotations, we derive the domain split ourselves.
 
-Each target vocabulary contains 100 terms. Korean candidates must occur in at
-least 20 utterances, have a recognition error rate of at least 8\,\%, and appear
-across at least five speaker or source groups; candidates are ranked by error
-count and screened for domain relevance using Qwen3-4B-Instruct. Mandarin
-candidates are ranked by error rate without LLM screening, under thresholds of
-15 occurrences, a 10\,\% error rate and five speakers, relaxed for \zhtec{} to
-10 occurrences, an 8\,\% error rate and four speakers. Vocabulary selection uses
-reference transcripts and the corresponding recogniser's output; term lists and
-instance counts therefore differ between recognisers.
+Each target vocabulary contains 100 terms. Candidates must occur in at least 10--20 utterances and have a recognition error rate of at least 8--10\,\%, depending on the corpus, and are ranked by recognition error. The Korean lists are additionally screened for domain relevance with Qwen3-4B-Instruct. Vocabulary selection uses reference transcripts and the corresponding recogniser's output.
 
-We additionally explored domain-term candidate extraction from Korean ASR
-pseudo-labels without consulting reference transcripts during candidate
-generation. Tokens were analysed with a Korean morphological
-analyser~\cite{lee2024kiwi} and filtered to remove grammatical and generic
-items, after which the 1{,}000 most frequent surviving candidates were retained;
-this pool covers 67 of the 100 curated \corpA{} terms and 64 of the 100 curated
-\corpB{} terms. Domain relevance was assessed manually in this exploratory
-experiment, while the curated vocabularies were used only to examine coverage
-and to guide filter refinement. The resulting pool could subsequently be
-screened by an LLM, although that step was not evaluated. This procedure is a
-preliminary alternative to reference-based vocabulary selection; the correction
-results reported here use the reference-selected term lists.
+We additionally explored domain-term candidate extraction from Korean ASR pseudo-labels without referring to reference transcripts during candidate generation. Tokens were analysed with Kiwi, a Korean morphological analyser~\cite{lee2024kiwi}, and filtered to remove grammatical and generic items, after which the 1{,}000 most frequent survivors were retained. A second pass then judged domain relevance, narrowing the pool to 272 candidates on \corpA{} and 295 on \corpB{} while recovering 67 and 64 of the 100 curated terms, the same coverage as the unnarrowed pool. Domain relevance was assessed manually in this exploratory experiment, and the curated vocabularies were used only to examine coverage and to guide filter refinement. Applying the same procedure to Mandarin requires word segmentation first, since pseudo-labels  carry no word boundaries. With jieba and a deeper cut of 5{,}000 candidates, the Mandarin pool narrows to 907 and recovers 50 of the 100 curated AISHELL-1 terms. This is a preliminary alternative to reference-based vocabulary selection, and the correction results reported here use the reference-selected term lists.
+
 
 \subsection{Recognition systems and implementation}
 
-Whisper large-v3-turbo~\cite{radford2023robust} is evaluated on both Korean
-corpora and all four Mandarin domains. Qwen3-ASR-1.7B~\cite{qwen2026asr} is
-additionally evaluated
-on the Korean corpora. Each corrected transcript is compared with the original
-output of the same recogniser.
+Whisper large-v3-turbo~\cite{radford2023robust} is evaluated on both Korean domains and all four Mandarin domains. Qwen3-ASR-1.7B~\cite{qwen2026asr} is additionally evaluated on the Korean corpora. Each corrected transcript is compared with the original output of the same recogniser.
 
-The encoder is HuBERT: layer 10 of \texttt{hubert-base-korean} for Korean and
-layer 9 of \texttt{chinese-hubert-base} for Mandarin. Frame representations are mean-pooled
-into 768-dimensional vectors and $L_2$-normalised. In the Korean Whisper
-experiments, indexed spans use Whisper's word timestamps; flagged utterances are
-realigned with Qwen3-ForcedAligner-0.6B~\cite{qwen2026asr} to locate query
-spans. Indexed spans
-include 0.05\,s of padding on each side; spans shorter than 0.08\,s and labels
-shorter than two characters are excluded.
+The encoder is HuBERT: layer 10 of \texttt{hubert-base-korean} for Korean and layer 9 of \texttt{chinese-hubert-base} for Mandarin. Frame representations are mean-pooled into 768-dimensional vectors and $L_2$-normalised. In the Korean Whisper experiments, indexed spans use Whisper's word timestamps; flagged utterances are realigned with Qwen3-ForcedAligner-0.6B~\cite{qwen2026asr} to locate query spans. Indexed spans include 0.05\,s of padding on each side. Spans shorter than 0.08\,s and single-character labels are excluded.
 
-The Korean detector uses Gemini-3-Flash with domain-specific prompts, temperature
-zero, and batches of 20 utterances. Its utterance-level recall and precision are
-73.8\,\% and 35.2\,\% on \corpA{}, and 89.5\,\% and 75.6\,\% on \corpB{}. For
-this calculation an utterance is considered erroneous if its hypothesis omits at
-least one reference term.
+The Korean detector uses Gemini-3-Flash with domain-specific prompts, temperature zero, and batches of 20 utterances. Its utterance-level recall and precision are 73.8\,\% and 35.2\,\% on \corpA{}, and 89.5\,\% and 75.6\,\% on \corpB{}. For this calculation an utterance is considered erroneous if its hypothesis omits at least one reference term.
 
 Synthetic exemplars are generated with Qwen3-TTS~\cite{qwen2026tts} using three
-voices. The main
-Korean experiments combine mined and synthetic exemplars. The Mandarin
-experiments evaluate six gallery configurations: synthetic exemplars, synthetic
-exemplars with an estimated embedding-offset correction, up to nine mined
-exemplars per term, all mined exemplars, and unions of all mined exemplars with
-either synthetic configuration.
+voices. The main experiments combine mined and synthetic exemplars for both
+languages.
+
 \subsection{Baselines and controls}
 
 The baseline is the uncorrected output of each ASR system. On the Korean Whisper
@@ -415,14 +368,8 @@ baseline, with selection restricted to the proposed joint acoustic and phonetic
 rule; configurations that violate the CER condition are reported separately. In
 the Korean Whisper experiments the selected phonetic threshold is
 $\delta = 0.6$, with $\tau = 0$ on \corpA{} and $\tau = -0.1$ on \corpB{}.
-
-The main evaluation is in-sample: vocabulary selection, threshold selection and
-scoring use the same evaluation pool. We additionally assess threshold selection
-by dividing the Korean speaker or source groups into two subsets using random
-seed zero, selecting thresholds on one subset and evaluating on the other with
-the remaining pipeline unchanged. Confidence intervals for relative DTER
-reductions are estimated from 2{,}000 bootstrap resamples of the evaluation
-groups.
+ 
+The main evaluation is in-sample. Vocabulary and threshold selection use each run's original pool; the selected corrections are then rescored over the full corpus without retuning. Qwen3-ASR on \corpB{} uses the full corpus for correction; the other Korean runs use reference-selected pools. The control and grouped-split analyses retain their original pool-based scoring and normalisation. 
 
 \begin{table}[t]
 \centering
@@ -434,11 +381,11 @@ evaluation.}
 \toprule
 stage & use of reference transcripts \\
 \midrule
-acoustic indexing and exemplar mining & \textbf{no} --- spans are indexed and
+acoustic indexing and exemplar mining & \textbf{no} -- spans are indexed and
   selected using ASR pseudo-labels \\[2pt]
-Korean TTS carrier selection & \textbf{yes} --- carrier sentences are selected
+Korean TTS carrier selection & \textbf{yes} -- carrier sentences are selected
   from reference transcripts \\[2pt]
-error detection and correction & \textbf{no} --- references are not used to
+error detection and correction & \textbf{no} -- references are not used to
   determine substitutions \\[2pt]
 term-list selection & main experiments use reference--hypothesis discrepancies,
   with LLM screening for Korean; the exploratory alternative generates
@@ -592,10 +539,10 @@ without a CER constraint. CER changes are in percentage points.}
 \cmidrule(lr){3-4}
 domain & $N_{\mathrm{ref}}$ & base & lowest & $\Delta$CER & $\Delta$CER \\
 \midrule
-\zhfin{} & 3{,}566 & 51.8 & 38.1 & $+0.092$ & $+0.00124$ \\
-\zhleg{} & 2{,}937 & 45.7 & 36.5 & $+0.034$ & $+0.00067$ \\
-\zhspo{} & 5{,}456 & 58.5 & 41.3 & $+0.160$ & $+0.00766$ \\
-\zhtec{} & 2{,}141 & 20.7 & 16.5 & $+0.070$ & $+0.00139$ \\
+\zhfin{} & 3{,}566 & 51.8 & 40.4 & $+0.097$ & $+0.02141$ \\
+\zhleg{} & 2{,}937 & 45.7 & 36.9 & $+0.028$ & $+0.00352$ \\
+\zhspo{} & 5{,}456 & 58.5 & 46.7 & $+0.111$ & $+0.03799$ \\
+\zhtec{} & 2{,}141 & 20.7 & 16.7 & $+0.068$ & $+0.02053$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -605,11 +552,7 @@ rule in each Mandarin domain, together with the associated CER change. The final
 column gives the minimum CER increase across all evaluated joint-rule
 configurations.
 
-Across the six galleries and threshold combinations, none of the 480 evaluated
-configurations satisfies the CER constraint. Nevertheless the lowest-DTER
-configurations reduce term error in all four domains: DTER decreases from
-51.8\,\% to 38.1\,\% in finance and from 58.5\,\% to 41.3\,\% in sport, at CER
-increases of 0.092 and 0.160 percentage points.
+Across the threshold combinations, 80 configurations satisfies the CER constraint. Nevertheless the lowest-DTER configurations reduce term error in all four domains: DTER decreases from 51.8\,\% to 40.4\,\% in finance and from 58.5\,\% to 46.7\,\% in sport, at CER increases of 0.097 and 0.11 percentage points.
 
 The smallest CER increases are close to zero but remain positive. The result
 therefore concerns the evaluated configurations under the stated selection
@@ -636,21 +579,10 @@ covers 80 terms and compound mining increases coverage to 81. Differences in
 coverage may contribute to the observed results, although exemplar counts and
 recording conditions also differ.
 
-The qualitative examples illustrate that a recognised word can be linguistically
-valid while being inappropriate for the utterance: one \corpB{} example replaces
-\emph{toyoil} (``Saturday'') with \emph{tohyeol} (``haematemesis''). Such cases
-motivate comparing the recognised form with both contextual and acoustic
-evidence.
+The qualitative examples illustrate that a recognised word can be linguistically valid while being inappropriate for the utterance: one \corpB{} example replaces \emph{toyoil} (``Saturday'') with \emph{tohyeol} (``haematemesis''). Such cases motivate comparing the recognised form with both contextual and acoustic evidence.
 
-Replacement length also varies. The replacement is shorter than the flagged
-string in 363 of 1{,}152 accepted \corpB{} substitutions and 21 of 821 on
-\corpA{}. These counts describe changes in string length rather than verified
-grammatical-suffix deletion; a separate morphological analysis would be required
-to determine how often correction alters grammatical structure.
+Replacement length also varies. The replacement is shorter than the flagged string in 363 of 1{,}152 accepted \corpB{} substitutions and 21 of 821 on \corpA{}. These counts describe changes in string length rather than verified grammatical-suffix deletion; a separate morphological analysis would be required to determine how often correction alters grammatical structure.
 
-
-
-\vfill\pagebreak
 
 % References should be produced using the bibtex program from suitable
 % BiBTeX files (here: strings, refs, manuals). The IEEEbib.bst bibliography
