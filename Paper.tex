@@ -227,12 +227,7 @@ carrier sentences using multiple TTS voices. The generated sentences are aligned
 and the target-term spans are extracted and embedded using the same encoder as
 the query spans.
 
-The main Korean configuration combines mined and synthetic exemplars. Because
-mining requires a matching pseudo-label span, terms that are consistently
-misrecognised may have few or no mined exemplars, motivating the use of
-synthetic speech to supplement their acoustic evidence. The gallery
-configurations evaluated for Mandarin are specified separately in the
-experimental setup.
+The main configuration combines mined and synthetic exemplars for both languages. Because mining requires a matching pseudo-label span, terms that are consistently misrecognised may have few or no mined exemplars, motivating the use of synthetic speech to supplement their acoustic evidence.
 
 \subsection{Query representation and acoustic retrieval}
 \label{sec:gate}
@@ -552,7 +547,8 @@ rule in each Mandarin domain, together with the associated CER change. The final
 column gives the minimum CER increase across all evaluated joint-rule
 configurations.
 
-Across the threshold combinations, 80 configurations satisfies the CER constraint. Nevertheless the lowest-DTER configurations reduce term error in all four domains: DTER decreases from 51.8\,\% to 40.4\,\% in finance and from 58.5\,\% to 46.7\,\% in sport, at CER increases of 0.097 and 0.11 percentage points.
+None of the 80 evaluated configurations satisfies the CER constraint. Nevertheless the lowest-DTER configurations reduce term error in all four domains: DTER decreases from 51.8\,\% to 40.4\,\% in finance and from 58.5\,\% to 46.7\,\% in sport, at CER increases of 0.097 and 0.111 percentage points.
+
 
 The smallest CER increases are close to zero but remain positive. The result
 therefore concerns the evaluated configurations under the stated selection
