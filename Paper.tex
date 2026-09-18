@@ -41,7 +41,7 @@
 
 % Title.
 % ------
-\title{Correcting Domain-Term ASR Errors with Acoustic Exemplar Retrieval and a Form-Similarity Constraint.}
+\title{Correcting Domain-Term ASR Errors with Acoustic Exemplar Retrieval and a Form-Similarity Constraint}
 %
 % Single address.
 % ---------------
@@ -72,14 +72,7 @@
 \maketitle
 %
 \begin{abstract}
-Automatic speech recognition is highly accurate on generic speech, but its error
-rate stays disproportionately high on domain terms, because they are rare in
-training data and often near-homophones of common words. Domain terms carry much
-of a transcript's meaning, yet contextual biasing requires access to the decoder
-and supervised adaptation often requires labelled in-domain audio. We correct such errors after
-decoding, retrieving acoustic exemplars of each domain term and substituting only
-when an acoustic margin and a phonetic distance agree. Galleries combine speech mined from
-the recogniser's own pseudo-labels with synthetic speech; the correction decision itself uses no reference transcript. On Korean clinical and finance speech the method lowers domain-term error by 25.5\,\% and 16.5\,\% relative under Qwen3-ASR, and by 14.3\,\% and 10.7\,\% under Whisper large-v3-turbo. Full-corpus mean per-utterance CER decreases in all four settings, although character-weighted CER increases on finance speech for both recognisers. On four Mandarin domains it lowers domain-term error by 19.2--22.0\,\% relative. An ablation attributes most of the reduction to the phonetic condition, the acoustic margin contributing little once it is applied.
+Automatic speech recognition is highly accurate on generic speech, but its error rate stays disproportionately high on domain terms, because they are rare in training data and often near-homophones of common words. Domain terms carry much of a transcript's meaning, yet contextual biasing requires access to the decoder and supervised adaptation often requires labelled in-domain audio. We correct such errors after decoding, retrieving acoustic exemplars of each domain term and substituting only when an acoustic margin and a phonetic distance agree. Galleries combine speech mined from the recogniser's own pseudo-labels with synthetic speech; the correction decision itself uses no reference transcript. On Korean clinical and finance speech the method lowers domain-term error by 25.5\,\% and 16.5\,\% relative under Qwen3-ASR, and by 14.3\,\% and 10.7\,\% under Whisper large-v3-turbo. Full-corpus mean per-utterance CER decreases in all four settings, although character-weighted CER increases on finance speech for both recognisers. On four Mandarin domains it lowers domain-term error by 19.2--22.0\,\% relative. An ablation attributes most of the reduction to the phonetic condition, the acoustic margin contributing little once it is applied.
 \end{abstract}
 
 %
@@ -90,22 +83,11 @@ Speech recognition, post-ASR error correction, retrieval-based correction, pseud
 \section{Introduction}
 \label{sec:intro}
 
-Automatic speech recognition (ASR) systems can achieve low aggregate error rates
-while remaining unreliable for domain-specific terminology. Errors in these terms
-can disproportionately affect the interpretation of a transcript, particularly in
-specialised settings such as clinical communication. In the Korean clinical
-evaluation pool examined in this study, Whisper large-v3-turbo achieves a
-character error rate (CER) of 5.1\,\%, yet misrecognises \emph{hyeollyo}
-(``haematuria'') in 98.0\,\% of the 348 utterances containing the term. This
-discrepancy illustrates why aggregate recognition accuracy alone is insufficient
-to characterise the preservation of domain-specific information.
+Automatic speech recognition (ASR) systems can achieve low aggregate error rates while remaining unreliable for domain-specific terminology. Errors in these terms can disproportionately affect the interpretation of a transcript, particularly in specialised settings such as clinical communication. In the Korean clinical evaluation pool examined in this study, Whisper large-v3-turbo achieves a character error rate (CER) of 5.1\,\%, yet misrecognises \emph{hyeollyo} (``haematuria'') in 98.0\,\% of the 348 utterances containing the term. This discrepancy illustrates why aggregate recognition accuracy alone is insufficient to characterise the preservation of domain-specific information.
 
-Existing approaches address this problem at different stages of the recognition
-pipeline. Contextual biasing incorporates relevant vocabulary during decoding
-through weighted finite-state transducers or neural attention mechanisms, with
-scalable variants supporting large contextual
-vocabularies~\cite{aleksic2015bringing,hall2015composition,pundak2018deep,%
-jain2020contextual,chang2021context,le2021deep,sun2021tree}. Post-recognition
+Existing approaches address this problem at different stages of the recognition pipeline. Contextual biasing incorporates relevant vocabulary during decoding
+through weighted finite-state transducers or neural attention mechanisms, with scalable variants supporting large contextual
+vocabularies~\cite{aleksic2015bringing,hall2015composition,pundak2018deep,jain2020contextual,chang2021context,le2021deep,sun2021tree}. Post-recognition
 methods include language-model rescoring~\cite{shin2019effective}, generative
 error correction~\cite{chen2023hyporadise,ma2023llm} and contextual spelling
 correction~\cite{guo2019spelling,wang2022towards}. Rescoring selects among
@@ -116,26 +98,9 @@ requires integration with the recogniser. We examine correction using an
 existing transcript, its associated audio and a domain vocabulary, without
 retraining the recogniser.
 
-Acoustic evidence has also been used in post-recognition correction.
-Pundak et al.~\cite{pundak2022onthefly} retrieve audio exemplars associated with
-user-provided corrections, while Wang et al.~\cite{wang2023acoustics} introduce
-external acoustic attention into contextual spelling correction. Building on
-these approaches, we examine two questions: how can acoustic exemplar collections
-be constructed without user corrections or reference transcripts during gallery
-construction, and what additional benefit does acoustic comparison
-provide when candidate substitutions are already constrained by phonetic
-similarity?
+Acoustic evidence has also been used in post-recognition correction. Pundak et al.~\cite{pundak2022onthefly} retrieve audio exemplars associated with user-provided corrections, while Wang et al.~\cite{wang2023acoustics} introduce external acoustic attention into contextual spelling correction. Building on these approaches, we examine two questions: how can acoustic exemplar collections be constructed without user corrections or reference transcripts during gallery construction, and what additional benefit does acoustic comparison provide when candidate substitutions are already constrained by phonetic similarity?
 
-We investigate an exemplar-based correction framework that requires access to the
-audio, a timestamped ASR hypothesis, and a domain-term list. For each word flagged
-as a potential error, the framework retrieves candidate terms using acoustic
-embeddings from a pretrained, fixed speech encoder. A substitution is accepted only when the
-candidate satisfies both an acoustic-margin condition relative to the recognised
-word and a phonetic-distance constraint. Exemplar galleries combine speech
-segments mined from ASR-generated transcripts with synthetic speech produced by
-text-to-speech. The correction decision does not use reference transcripts;
-however, the experimental preparation uses references for term-list selection,
-Korean TTS carrier construction, and threshold selection.
+We investigate an exemplar-based correction framework that requires access to the audio, a timestamped ASR hypothesis, and a domain-term list. For each word flagged as a potential error, the framework retrieves candidate terms using acoustic embeddings from a pretrained, fixed speech encoder. A substitution is accepted only when the candidate satisfies both an acoustic-margin condition relative to the recognised word and a phonetic-distance constraint. Exemplar galleries combine speech segments mined from ASR-generated transcripts with synthetic speech produced by text-to-speech. The correction decision does not use reference transcripts; however, the experimental preparation uses references for term-list selection, Korean TTS carrier construction, and threshold selection.
 
 The contributions of this work are threefold:
 
@@ -165,13 +130,7 @@ The contributions of this work are threefold:
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{figures/fig_pipeline.pdf}
-\caption{Overview of the exemplar-based correction framework. Stage~I
-constructs an incumbent gallery from ASR-labelled audio spans and a domain-term
-gallery from mined and synthetic exemplars. Stage~II retrieves a candidate term
-for a flagged speech span and accepts the substitution only when both the
-acoustic-margin and phonetic-distance conditions are satisfied. Reference text
-is used during experimental preparation, including Korean TTS carrier selection,
-but is not required for the correction decision.}
+\caption{Overview of the exemplar-based correction framework. Stage~I constructs an incumbent gallery from ASR-labelled audio spans and a domain-term gallery from mined and synthetic exemplars. Stage~II retrieves a candidate term for a flagged speech span and accepts the substitution only when both the acoustic-margin and phonetic-distance conditions are satisfied. Reference text is used during experimental preparation, including Korean TTS carrier selection, but is not required for the correction decision.}
 \label{fig:pipeline}
 \end{figure*}
 
@@ -180,64 +139,28 @@ but is not required for the correction decision.}
 
 \subsection{Task formulation and framework overview}
 
-We consider post-recognition correction of domain-specific terms given an audio
-utterance $x$, its ASR hypothesis $h$, and a vocabulary $\Tlist$ containing $K$
-target terms. A language-model-based detector identifies at most one potentially
-misrecognised word $w$ in each hypothesis. The correction module then determines
-whether to retain $w$ or replace it with a term from $\Tlist$.
+We consider post-recognition correction of domain-specific terms given an audio utterance $x$, its ASR hypothesis $h$, and a vocabulary $\Tlist$ containing $K$ target terms. A language-model-based detector identifies at most one potentially misrecognised word $w$ in each hypothesis. The correction module then determines whether to retain $w$ or replace it with a term from $\Tlist$.
 
-As illustrated in Fig.~\ref{fig:pipeline}, the framework comprises two stages:
-offline gallery construction and utterance-level correction. The first stage
-constructs acoustic exemplar collections from ASR-labelled speech and synthesised
-speech. The second stage embeds the flagged audio span, retrieves a candidate
-domain term, and applies a decision rule combining acoustic and phonetic
-evidence.
+As illustrated in Fig.~\ref{fig:pipeline}, the framework comprises two stages: offline gallery construction and utterance-level correction. The first stage constructs acoustic exemplar collections from ASR-labelled speech and synthesised speech. The second stage embeds the flagged audio span, retrieves a candidate domain term, and applies a decision rule combining acoustic and phonetic evidence.
 
-The correction module operates on audio and recognition hypotheses without
-requiring access to decoder states, lattices, or $n$-best lists. Gallery
-construction can access audio and pseudo-labels from the entire evaluation
-corpus, making the acoustic indexing procedure transductive. Reference
-transcripts are not required for the correction decision; however, the
-experimental preparation uses references for term-list selection, Korean TTS
-carrier construction, and threshold selection.
+The correction module operates on audio and recognition hypotheses without requiring access to decoder states, lattices, or $n$-best lists. Gallery construction can access audio and pseudo-labels from the entire evaluation corpus, making the acoustic indexing procedure transductive. Reference transcripts are not required for the correction decision; however, the experimental preparation uses references for term-list selection, Korean TTS carrier construction, and threshold selection.
 
 \subsection{Acoustic exemplar galleries}
 \label{sec:galleries}
 
 We extract acoustic embeddings using a pretrained HuBERT
-encoder~\cite{hsu2021hubert} whose parameters remain fixed throughout the
-experiments. Frame-level representations from a selected encoder layer are
-averaged over time and $L_2$-normalised. The same encoder and layer are used for query spans and
-gallery exemplars within each experimental configuration.
+encoder~\cite{hsu2021hubert} whose parameters remain fixed throughout the experiments. Frame-level representations from a selected encoder layer are averaged over time and $L_2$-normalised. The same encoder and layer are used for query spans and gallery exemplars within each experimental configuration.
 
-\textbf{Incumbent gallery.} The incumbent gallery $\Sgal$ contains indexed audio
-spans grouped by their ASR-generated labels. For a recognised word $w$, the
-subset $\Sgal_w$ therefore represents speech segments that the recogniser
-transcribed as $w$. These labels are not verified against reference transcripts;
-consequently, the gallery may contain systematic recognition errors.
+\textbf{Incumbent gallery.} The incumbent gallery $\Sgal$ contains indexed audio spans grouped by their ASR-generated labels. For a recognised word $w$, the subset $\Sgal_w$ therefore represents speech segments that the recogniser transcribed as $w$. These labels are not verified against reference transcripts; consequently, the gallery may contain systematic recognition errors.
 
-\textbf{Domain-term gallery.} The term gallery contains an exemplar set $\Egal_T$
-for each target term $T$. Exemplars are obtained from two sources. \emph{Mined
-speech}: audio spans are selected when their pseudo-labels match a target term.
-For terms without single-token exemplars, the Korean pipeline also searches
-contiguous aligned tokens whose concatenation matches the term and embeds the
-combined audio span. This procedure does not use reference transcripts to verify
-the spoken content. \emph{Synthetic speech}: target terms are synthesised within
-carrier sentences using multiple TTS voices. The generated sentences are aligned,
-and the target-term spans are extracted and embedded using the same encoder as
-the query spans.
+\textbf{Domain-term gallery.} The term gallery contains an exemplar set $\Egal  _T$ for each target term $T$. Exemplars are obtained from two sources. \emph{Mined speech}: audio spans are selected when their pseudo-labels match a target term. For terms without single-token exemplars, the Korean pipeline also searches contiguous aligned tokens whose concatenation matches the term and embeds the combined audio span. This procedure does not use reference transcripts to verify the spoken content. \emph{Synthetic speech}: target terms are synthesised within carrier sentences using multiple TTS voices. The generated sentences are aligned, and the target-term spans are extracted and embedded using the same encoder as the query spans.
 
 The main configuration combines mined and synthetic exemplars for both languages. Because mining requires a matching pseudo-label span, terms that are consistently misrecognised may have few or no mined exemplars, motivating the use of synthetic speech to supplement their acoustic evidence.
 
 \subsection{Query representation and acoustic retrieval}
 \label{sec:gate}
 
-For each flagged word $w$, alignment of the hypothesis to the input audio
-identifies the corresponding speech span. Its normalised embedding is denoted by
-$\mathbf{q}_w$. Acoustic similarity is measured using cosine distance,
-$d_{\mathrm{ac}}(\mathbf{u},\mathbf{v}) = 1-\mathbf{u}^{\!\top}\mathbf{v}$.
-Let $A_k$ denote the mean of the $k$ smallest available distances. The incumbent
-and candidate scores are
+For each flagged word $w$, alignment of the hypothesis to the input audio identifies the corresponding speech span. Its normalised embedding is denoted by $\mathbf{q}_w$. Acoustic similarity is measured using cosine distance, $d_{\mathrm{ac}}(\mathbf{u},\mathbf{v}) = 1-\mathbf{u}^{\!\top}\mathbf{v}$. Let $A_k$ denote the mean of the $k$ smallest available distances. The incumbent and candidate scores are
 \begin{align}
 S(\mathbf{q}_w,w) &= A_{k_S}\!\left(\left\{d_{\mathrm{ac}}(\mathbf{q}_w,\mathbf{s}_i) : i\in\Sgal_w\right\}\right),
 \label{eq:S}\\
@@ -258,22 +181,16 @@ substring of $w$, the proposed substitution is discarded.
 
 \subsection{Acoustic and phonetic decision rule}
 
-A retrieved candidate is accepted only when it satisfies both an acoustic-margin
-condition and a phonetic-distance constraint:
+A retrieved candidate is accepted only when it satisfies both an acoustic-margin condition and a phonetic-distance constraint:
 \begin{equation}
 S(\mathbf{q}_w,w)-R(\mathbf{q}_w,T_1)>\tau
 \quad\land\quad
 \dph(w,T_1)\leq\delta .
 \label{eq:gate}
 \end{equation}
-The acoustic margin compares the query's distance to the incumbent gallery with
-its distance to the candidate-term gallery. A positive margin indicates that the
-candidate exemplars are acoustically closer on average. The threshold $\tau$
-controls the required relative advantage; a negative value permits candidates
-whose retrieval score is slightly worse than the incumbent score.
+The acoustic margin compares the query's distance to the incumbent gallery with its distance to the candidate-term gallery. A positive margin indicates that the candidate exemplars are acoustically closer on average. The threshold $\tau$ controls the required relative advantage; a negative value permits candidates whose retrieval score is slightly worse than the incumbent score.
 
-The phonetic constraint restricts substitutions to terms with similar linguistic
-forms. We define
+The phonetic constraint restricts substitutions to terms with similar linguistic forms. We define
 \begin{equation}
 \dph(w,T) = \frac{\operatorname{Lev}\!\left(\phi(w),\phi(T)\right)}
                  {\max\!\left(|\phi(w)|,|\phi(T)|,1\right)} ,
@@ -282,10 +199,7 @@ forms. We define
 where $\operatorname{Lev}$ is Levenshtein distance and $\phi$ maps text to a language-specific symbol sequence. For Korean, $\phi$ decomposes written Hangul syllables into jamo without applying pronunciation-conversion rules, so the distance measures orthographic form. For Mandarin, $\phi$ uses pinyin initials and finals with tone information, which makes the distance phonetic. We use \emph{phonetic} as a shorthand for both throughout.
 
 
-When both conditions hold, the flagged word is replaced by $T_1$; otherwise the
-original hypothesis is retained. The framework makes at most one substitution per
-utterance. The contribution of each decision condition is evaluated through the
-controls described in Sec.~\ref{sec:controls}.
+When both conditions hold, the flagged word is replaced by $T_1$; otherwise the original hypothesis is retained. The framework makes at most one substitution per utterance. The contribution of each decision condition is evaluated through the controls described in Sec.~\ref{sec:controls}.
 
 \section{Experimental setup}
 \label{sec:setup}
@@ -310,58 +224,31 @@ The encoder is HuBERT: layer 10 of \texttt{hubert-base-korean} for Korean and la
 
 The Korean detector uses Gemini-3-Flash with domain-specific prompts, temperature zero, and batches of 20 utterances. Its utterance-level recall and precision are 73.8\,\% and 35.2\,\% on \corpA{}, and 89.5\,\% and 75.6\,\% on \corpB{}. For this calculation an utterance is considered erroneous if its hypothesis omits at least one reference term.
 
-Synthetic exemplars are generated with Qwen3-TTS~\cite{qwen2026tts} using three
-voices. The main experiments combine mined and synthetic exemplars for both
-languages.
+Synthetic exemplars are generated with Qwen3-TTS~\cite{qwen2026tts} using three voices. The main experiments combine mined and synthetic exemplars for both languages.
 
 \subsection{Baselines and controls}
 
-The baseline is the uncorrected output of each ASR system. On the Korean Whisper
-outputs we compare the proposed decision rule with three controls:
-acoustic-margin filtering alone, phonetic filtering alone, and text-only
-correction. The first two retain the same acoustically retrieved candidates and
-isolate the contribution of each acceptance condition. The text-only control
-instead selects the vocabulary term with the smallest phonetic distance to the
-flagged word and applies the phonetic threshold.
 
-All controls use the same detector, vocabulary and evaluation pool. For the
-matched comparison, text-only correction is restricted to utterances for which
-the acoustic pipeline produces a candidate; its candidate selection and
-acceptance decisions use no acoustic scores. Thresholds are fixed at the
-corresponding Korean Whisper operating point. We compare substitution counts,
-domain-term error rate and character error rate. Decoder-time contextual biasing
-and trained spelling-correction models are not evaluated.
+The baseline is the uncorrected output of each ASR system. For both Korean recognisers, we compare acoustic-margin filtering alone, phonetic filtering alone, and their joint application. These conditions retain the same acoustically retrieved candidates and isolate the contribution of each acceptance condition. On the Whisper outputs, we additionally evaluate a matched text-only control that selects the closest vocabulary term using phonetic distance alone.
+
+Within each ASR and corpus setting, the controls use the same detector, vocabulary, evaluation pool, and operating-point thresholds. The matched text-only control is restricted to utterances for which the acoustic pipeline produces a candidate. Its candidate selection and acceptance decisions use no acoustic scores. We compare substitution counts, DTER, and CER. Decoder-time contextual biasing and trained spelling-correction models are not evaluated.
+
 
 \subsection{Evaluation metrics and protocol}
 
-We report domain-term error rate (DTER) and character error rate (CER). A term
-instance is one distinct target term occurring in an utterance's reference
-transcript; an instance is correct if the term appears anywhere in the
-hypothesis. DTER is
+We report domain-term error rate (DTER) and character error rate (CER). A term instance is one distinct target term occurring in an utterance's reference transcript; an instance is correct if the term appears anywhere in the hypothesis. DTER is
 \begin{equation}
 \mathrm{DTER} = \frac{N_{\mathrm{missed}}}{N_{\mathrm{reference}}}\times 100\,\% ,
 \label{eq:dter}
 \end{equation}
-where $N_{\mathrm{missed}}$ is the number of reference-term instances missing
-from the hypotheses and $N_{\mathrm{reference}}$ the total number of
-reference-term instances. Korean evaluation uses token-anchored matching;
-Mandarin evaluation uses Han-character substring matching after orthographic
-normalisation.
+where $N_{\mathrm{missed}}$ is the number of reference-term instances missing from the hypotheses and $N_{\mathrm{reference}}$ the total number of reference-term instances. Korean evaluation uses token-anchored matching; Mandarin evaluation uses Han-character substring matching after orthographic normalisation.
 
-DTER does not penalise inserted terms absent from the reference. We therefore report CER to assess changes to the complete transcript. Main-result CER is the
-mean of per-utterance CER over each full Korean corpus or Mandarin domain. Utterances without accepted substitutions retain their ASR hypotheses. For the
-Korean main results, the same numeral and orthographic normalisation is applied to the original and corrected hypotheses; Mandarin uses its language-specific normalisation. We also examine micro CER, defined as total character edits divided by total reference characters.
+DTER does not penalise inserted terms absent from the reference. We therefore report CER to assess changes to the complete transcript. Main-result CER is the mean of per-utterance CER over each full Korean corpus or Mandarin domain. Utterances without accepted substitutions retain their ASR hypotheses. For the Korean main results, the same numeral and orthographic normalisation is applied to the original and corrected hypotheses; Mandarin uses its language-specific normalisation. We also examine micro CER, defined as total character edits divided by total reference characters.
 
 
-For each corpus and recogniser, results are compared with the corresponding
-uncorrected ASR output. We report the number of reference-term instances
-alongside DTER because the selected vocabularies and denominators differ across
-experiments. Absolute changes in error rates are expressed in percentage points.
+For each corpus and recogniser, results are compared with the corresponding uncorrected ASR output. We report the number of reference-term instances alongside DTER because the selected vocabularies and denominators differ across experiments. Absolute changes in error rates are expressed in percentage points.
 
-Thresholds are selected to minimise DTER subject to CER remaining at or below
-baseline, with selection restricted to the proposed joint acoustic and phonetic
-rule; configurations that violate the CER condition are reported separately. In
-the Korean Whisper experiments the selected phonetic threshold is
+Thresholds are selected to minimise DTER subject to CER remaining at or below baseline, with selection restricted to the proposed joint acoustic and phonetic rule; configurations that violate the CER condition are reported separately. In the Korean Whisper experiments the selected phonetic threshold is
 $\delta = 0.6$, with $\tau = 0$ on \corpA{} and $\tau = -0.1$ on \corpB{}.
  
 The main evaluation is in-sample. Vocabulary and threshold selection use each run's original pool; the selected corrections are then rescored over the full corpus without retuning. Qwen3-ASR on \corpB{} uses the full corpus for correction; the other Korean runs use reference-selected pools. The control and grouped-split analyses retain their original pool-based scoring and normalisation. 
@@ -376,28 +263,23 @@ evaluation.}
 \toprule
 stage & use of reference transcripts \\
 \midrule
-acoustic indexing and exemplar mining & \textbf{no} -- spans are indexed and
+acoustic indexing and exemplar mining & \textbf{no} --- spans are indexed and
   selected using ASR pseudo-labels \\[2pt]
-Korean TTS carrier selection & \textbf{yes} -- carrier sentences are selected
+Korean TTS carrier selection & \textbf{yes} --- carrier sentences are selected
   from reference transcripts \\[2pt]
-error detection and correction & \textbf{no} -- references are not used to
+error detection and correction & \textbf{no} --- references are not used to
   determine substitutions \\[2pt]
 term-list selection & main experiments use reference--hypothesis discrepancies,
   with LLM screening for Korean; the exploratory alternative generates
   candidates from pseudo-labels \\[2pt]
-threshold selection & references are used on the evaluation pool for the main
-  results and on the development subset for the threshold-split analysis
-  \\[2pt]
+threshold selection & references are used on the evaluation pool \\[2pt]
 evaluation and domain assignment & references are used to calculate DTER and
   CER and to assign the Mandarin domain labels \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\noindent Once the vocabulary, galleries and thresholds have been prepared,
-correction can operate without reference transcripts. The reference-selected
-vocabularies prioritise error-prone terms, so their baseline DTER values should
-not be interpreted as error rates over the complete vocabulary.
+\noindent Once the vocabulary, galleries and thresholds have been prepared, correction can operate without reference transcripts. The reference-selected vocabularies prioritise error-prone terms, so their baseline DTER values should not be interpreted as error rates over the complete vocabulary.
 
 \section{Results}
 \subsection{Main results}
@@ -434,20 +316,35 @@ The CER reductions are small, particularly on \corpA{}, and depend on the averag
 
 \begin{table}[t]
 \centering
-\caption{Controls on Korean Whisper outputs, retaining original evaluation-pool CER and normalisation. The text-only row uses the matched candidate-utterance subset described in Sec.~\ref{sec:setup}.}
+\caption{Controls on Korean outputs, retaining each run's original
+evaluation-pool scoring and normalisation, so DTER may differ slightly from
+Table~\ref{tab:main}. Text-only correction is evaluated only for Whisper and
+uses the matched candidate-utterance subset described in Sec.~\ref{sec:setup}.}
 \label{tab:controls}
-\setlength{\tabcolsep}{2.6pt}\small
-\begin{tabular}{llrrr}
+\setlength{\tabcolsep}{2.2pt}\small
+\begin{tabular}{@{}llrrr@{}}
 \toprule
-corpus & condition & subs & \best{DTER (\%)} & $\Delta$CER \\
+ASR & condition & subs & \best{DTER (\%)} & $\Delta$CER \\
 \midrule
-\multirow{4}{*}{\corpA{}}
+\multicolumn{5}{@{}l}{\corpA{}} \\
+\multirow{3}{*}{Qwen3}
+ & acoustic margin only     & 6{,}141 & 8.35 & $+0.320$ \\
+ & phonetic constraint only & 2{,}792 & 8.10 & $-0.008$ \\
+ & joint rule               & 2{,}791 & 8.10 & \best{$-0.008$} \\
+\cmidrule(lr){1-5}
+\multirow{4}{*}{Whisper}
  & acoustic margin only     & 3{,}276 & 5.80 & $+0.327$ \\
  & phonetic constraint only & \phantom{0}917 & 5.45 & $+0.006$ \\
  & joint rule               & \phantom{0}821 & 5.46 & \best{$-0.003$} \\
  & text-only correction     & 3{,}201 & \best{5.09} & $+0.148$ \\
 \midrule
-\multirow{4}{*}{\corpB{}}
+\multicolumn{5}{@{}l}{\corpB{}} \\
+\multirow{3}{*}{Qwen3}
+ & acoustic margin only     & 3{,}608 & 6.72 & $+0.417$ \\
+ & phonetic constraint only & 1{,}683 & 6.95 & $-0.033$ \\
+ & joint rule               & 1{,}663 & 6.95 & \best{$-0.040$} \\
+\cmidrule(lr){1-5}
+\multirow{4}{*}{Whisper}
  & acoustic margin only     & 3{,}441 & 12.79 & $+0.799$ \\
  & phonetic constraint only & 1{,}152 & 12.78 & $-0.062$ \\
  & joint rule               & 1{,}152 & 12.78 & \best{$-0.062$} \\
@@ -456,29 +353,12 @@ corpus & condition & subs & \best{DTER (\%)} & $\Delta$CER \\
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:controls} compares the acceptance conditions and the text-only
-baseline on the Korean Whisper outputs. Acoustic-margin filtering alone reduces
-DTER on both corpora but increases CER by 0.327 percentage points on \corpA{}
-and 0.799 on \corpB{}. Acoustic proximity alone therefore provides insufficient
-selectivity at these operating points.
 
-Phonetic filtering substantially reduces the number of substitutions and their
-CER cost. On \corpB{}, phonetic filtering alone and the joint rule accept
-exactly the same 1{,}152 substitutions: the acoustic-margin condition provides
-no additional filtering at this operating point.
+Table~\ref{tab:controls} compares the two acceptance conditions and their joint application for both Korean recognisers. Acoustic-margin filtering alone increases CER in all four settings. Phonetic filtering sharply reduces both the number of substitutions and their CER cost, and provides most of the joint rule's selectivity.
 
-On \corpA{}, adding the acoustic margin rejects 96 substitutions. This decreases
-the net number of recovered term instances by 10 while improving $\Delta$CER
-from $+0.006$ to $-0.003$ percentage points. The margin therefore determines
-whether this configuration satisfies the CER constraint, although its effect is
-small.
+For Qwen3-ASR, the phonetic-only condition is reconstructed from the saved candidate decisions. The joint rule differs from this condition by one substitution on \corpA{} and 20 substitutions on \corpB{}, without changing DTER at the reported precision. For Whisper on \corpB{}, the phonetic-only and joint conditions accept the same 1{,}152 substitutions. On \corpA{}, adding the acoustic margin to the Whisper condition rejects 96 substitutions and changes $\Delta$CER from $+0.006$ to $-0.003$ percentage points.
 
-Text-only correction achieves lower DTER than the joint rule on both corpora. On
-\corpA{} this improvement is accompanied by an increase in CER. On \corpB{} both
-methods reduce CER: text-only correction recovers more reference-term instances,
-while the joint rule produces the larger CER reduction. The comparison therefore
-identifies a trade-off between target-term recovery and overall transcription
-accuracy.
+The matched text-only control is available only for Whisper. It achieves lower DTER than  the joint rule on both corpora. On \corpA{}, this improvement is accompanied by an increase in CER. On \corpB{}, both methods reduce CER; the text-only control recovers more reference-term instances, while the joint rule produces the larger CER reduction. This comparison identifies a trade-off between target-term recovery and overall transcription accuracy.
 
 The corpora also differ in detector precision, vocabulary composition and
 exemplar coverage. These experiments do not isolate the contribution of detector
@@ -504,20 +384,6 @@ establish the content of each indexed span. The analysis suggests a possible
 explanation for the limited contribution of the acoustic margin; it does not
 establish a negative correlation between the margin and successful correction.
 
-\subsection{Threshold-selection analysis}
-\label{sec:split}
-
-The grouped threshold-split analysis evaluates whether improvements persist when
-thresholds are selected on a separate subset. On \corpA{} the selected
-thresholds produce a relative DTER reduction of 10.5\,\% (95\,\% confidence
-interval 8.7--12.6\,\%) and a CER change of $-0.017$ percentage points. On
-\corpB{} the relative DTER reduction is 16.3\,\% (11.5--23.4\,\%) at a CER
-change of $-0.078$.
-
-Both evaluation subsets retain improvements in DTER and CER, providing evidence
-that the observed reductions are not confined to the original threshold choices.
-Vocabulary selection and gallery construction remain unchanged, however, so this
-analysis does not provide an independent evaluation of the complete pipeline.
 
 \subsection{Mandarin evaluation}
 \label{sec:boundary}
